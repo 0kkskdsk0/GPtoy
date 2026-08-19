@@ -1,0 +1,5 @@
+# 运行时依赖（仅科学计算/绘图常用库，无任何遗传编程库）
+# numpy <2.5 / matplotlib <3.11：conda-forge 的 numpy 2.5.x 与 matplotlib 3.11.1
+# win-64 构建在填充渲染（ax.hist / ax.bar）时会原生崩溃，2.4.x / 3.10.x 正常
+numpy>=1.26,<2.5
+matplotlib>=3.8,<3.11

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gptoy"
+version = "0.1.0"
+description = "From-scratch genetic programming teaching package (Koza-1 problem)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=1.26,<2.5",
+    "matplotlib>=3.8,<3.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "nbclient>=0.10",
+    "nbformat>=5.9",
+    "jupyterlab>=4",
+]
+
+[tool.setuptools.packages.find]
+include = ["gptoy*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

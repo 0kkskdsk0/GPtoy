@@ -1,0 +1,21 @@
+# Conda environment definition (Success Criteria 3.4: python 3.12, env name GPtoy)
+# Create with:  conda env create -f environment.yml
+# (If your global .condarc lists unreachable mirrors, add:
+#   --override-channels -c conda-forge )
+name: GPtoy
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  # numpy <2.5：conda-forge 的 numpy 2.5.x 在 win-64 上会使 matplotlib 的
+  # 多边形填充渲染（ax.hist / ax.bar）原生崩溃（0xC0000409），2.4.x 正常
+  - "numpy>=1.26,<2.5"
+  # 上界 <3.11：conda-forge 的 matplotlib 3.11.1 win-64 构建在 Agg 渲染
+  # 多边形填充（ax.hist / ax.bar）时原生崩溃（0xC0000409），3.10.x 正常
+  - "matplotlib>=3.8,<3.11"
+  - jupyterlab>=4
+  - ipykernel
+  - pytest>=8
+  - nbclient>=0.10
+  - nbformat>=5.9
+  - pip
