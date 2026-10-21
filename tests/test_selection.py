@@ -1,8 +1,10 @@
-"""``gptoy.selection`` 冒烟测试。"""
+"""``gptoy.selection`` 测试：数量、压力、有放回、确定性、下标版本一致性。"""
+
+import pytest
 
 from gptoy.config import GPConfig
 from gptoy.representation import Node
-from gptoy.selection import tournament_select
+from gptoy.selection import tournament_select, tournament_select_indices
 from gptoy.utils import make_rng
 
 A = Node("x")
@@ -36,6 +38,17 @@ def test_with_replacement():
     assert only == [A, A, A, A, A]
 
 
+def test_stronger_pressure_picks_smaller_mse():
+    # 构造一个适应度梯度明显的种群；k 越大，选中父本平均 MSE 应更接近最优
+    pop = [A, B, A, B, A]
+    fits = [0.0, 1.0, 2.0, 3.0, 4.0]
+    idx1 = tournament_select_indices(pop, fits, 200, GPConfig(tournament_size=1), make_rng(11))
+    idx5 = tournament_select_indices(pop, fits, 200, GPConfig(tournament_size=5), make_rng(11))
+    mean1 = sum(fits[i] for i in idx1) / 200
+    mean5 = sum(fits[i] for i in idx5) / 200
+    assert mean5 < mean1
+
+
 def test_deterministic_with_seed():
     pop = [A, B, A, B, A]
     fits = [0.1, 0.2, 0.1, 0.2, 0.5]
@@ -45,8 +58,29 @@ def test_deterministic_with_seed():
     assert r1 == r2
 
 
-def test_mismatched_lengths_raise():
-    import pytest
+def test_indices_match_select():
+    """下标版本与节点版本必须消费相同随机数、给出一致结果。"""
+    pop = [A, B, A, B, A]
+    fits = [0.1, 0.2, 0.1, 0.2, 0.5]
+    cfg = GPConfig()
+    indices = tournament_select_indices(pop, fits, 20, cfg, make_rng(7))
+    nodes = tournament_select(pop, fits, 20, cfg, make_rng(7))
+    assert [pop[i].sexpr_str() for i in indices] == [n.sexpr_str() for n in nodes]
+    assert all(0 <= i < len(pop) for i in indices)
 
+
+def test_mismatched_lengths_raise():
     with pytest.raises(ValueError):
         tournament_select([A, B], [0.1], 2, GPConfig(), make_rng(0))
+    with pytest.raises(ValueError):
+        tournament_select_indices([A, B], [0.1], 2, GPConfig(), make_rng(0))
+
+
+def test_negative_k_raises():
+    with pytest.raises(ValueError):
+        tournament_select([A], [0.0], -1, GPConfig(), make_rng(0))
+
+
+def test_empty_population_raises():
+    with pytest.raises(ValueError):
+        tournament_select_indices([], [], 1, GPConfig(), make_rng(0))

@@ -41,6 +41,9 @@ class GPConfig:
     # ---- 判定阈值（3.1 / 3.3）----
     mse_target: float = 1e-6           # 训练/泛化 MSE 达标线
     gen0_unsolved_mse: float = 1e-3    # 第 0 代 best MSE 必须高于此值（未在第 0 代解出）
+    # 训练 MSE 达标后是否立即停止；False 时继续跑满 max_generations（长期行为实验用）。
+    # 默认 True 与旧版 run_gp 的提前收敛行为完全一致。
+    stop_on_target: bool = True
 
     # ---- 可复现性（3.3）----
     seed: int | None = None            # 由 find_seed.py 搜索后写入 notebook 固定值

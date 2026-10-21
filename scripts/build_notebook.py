@@ -278,7 +278,7 @@ print("变异后:", m.sexpr_str(), "depth =", m.depth())
 print("复制后与亲本结构相等:", r == p1, "| 但两者互不影响（深拷贝）")
 """))
     cells.append(_code("""
-# 6.3 概率分发：把 99 个父本变成 99 个下一代个体
+# 6.3 概率分发：把第 5 节选出的 20 个父本变成 20 个下一代个体（输出规模 = 父本数）
 offspring = apply_variation(parents, cfg, make_rng(SEED))
 print(f"apply_variation 输出 {len(offspring)} 个个体（与父本数量一致）")
 """))

@@ -14,6 +14,15 @@
 
 把最佳种子与运行统计写入 ``results/found_seed.json``，供 notebook 固定使用。
 
+科学诚实提醒
+------------
+本脚本为了得到**教学可用的成功案例**，在筛选时**同时使用训练集与泛化/测试集**的表现
+（``train_mse`` 与 ``test_mse`` 都要求 < ``mse_target``），再按首达代排序。因此：
+
+- 找到的种子是「被选中的成功样本」，**不能**用来估计算法的无偏成功率或泛化能力；
+- 报告实验结果时应使用预先指定的种子集合与独立测试集，并保留全部失败种子
+  （见 ``gptoy.experiments.run_seed_batch`` / ``summarize_runs`` 与学习实验室 Chapter 7）。
+
 用法（在仓库根目录执行）：
     python scripts/find_seed.py [--max-seed 200] [--gens 30] [--workers 8]
 """

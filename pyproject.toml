@@ -26,3 +26,8 @@ include = ["gptoy*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# 默认只跑快速测试；重型多种子/Notebook 全量执行用 `pytest -q -m slow`。
+addopts = "-m 'not slow'"
+markers = [
+    "slow: 重型测试（Notebook 全量执行等）",
+]

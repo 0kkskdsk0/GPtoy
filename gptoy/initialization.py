@@ -1,11 +1,16 @@
-"""初始化：Koza 经典 ramped half-and-half（3.2）。
+"""初始化：Koza 经典 full / grow / ramped half-and-half。
 
 - ``full(depth)``：所有叶子位于同一深度的满树；
 - ``grow(depth)``：形状可变的树（不超过指定深度）；
-- ``initial_population``：对 ``min_init_depth..max_init_depth`` 每个深度桶，
-  一半 full、一半 grow 随机生成，**绝不注入目标表达式**（3.2）。
+- ``initial_population(config, rng, method="ramped")``：按 ``method`` 生成初始种群：
+  - ``"ramped"``（默认，与旧版逐位一致）：对 ``min_init_depth..max_init_depth``
+    每个深度桶一半 full、一半 grow，最后打乱顺序；
+  - ``"full"``：每个个体都是深度 ``max_init_depth`` 的满树；
+  - ``"grow"``：每个个体都是深度不超过 ``max_init_depth`` 的可变形状树。
 
-所有随机选择必须使用传入的 ``rng: random.Random``（可复现性，3.3）。
+三种方法都**绝不注入目标表达式**：节点只从 ``config.function_set`` 与
+``config.terminal_set`` 中随机抽取。所有随机选择都使用传入的
+``rng: random.Random``，保证同一 seed 下逐位可复现。
 """
 
 import random
@@ -52,19 +57,36 @@ def _grow_level(depth: int, config: GPConfig, rng: random.Random) -> Node:
 
 
 def random_tree(depth: int, config: GPConfig, rng: random.Random) -> Node:
-    """按 full/grow 随机生成一棵深度不超过 ``depth`` 的树。"""
+    """按 full/grow 随机生成一棵深度不超过 ``depth`` 的树（保留的辅助接口）。"""
     if rng.random() < 0.5:
         return full(depth, config, rng)
     return grow(depth, config, rng)
 
 
-def initial_population(config: GPConfig, rng: random.Random) -> list[Node]:
-    """ramped half-and-half 生成规模恰为 ``population_size`` 的初始种群。
+# 允许的初始化方法名（供 notebook 下拉框与错误信息复用）。
+INIT_METHODS = ("full", "grow", "ramped")
 
-    对深度 2..6 的每个深度桶，各生成 ``population_size / 桶数`` 棵（一半 full、
-    一半 grow）；种群规模不能被桶数整除时，把余数按顺序分配到前面的桶。
-    最后打乱顺序，消除按深度分桶造成的排列偏置。
+
+def initial_population(
+    config: GPConfig, rng: random.Random, method: str = "ramped"
+) -> list[Node]:
+    """生成规模恰为 ``config.population_size`` 的初始种群。
+
+    ``method``：
+
+    - ``"ramped"``（默认）：ramped half-and-half。对深度 2..6 的每个深度桶，各生成
+      ``population_size / 桶数`` 棵（一半 full、一半 grow）；种群规模不能被桶数整除时，
+      把余数按顺序分配到前面的桶；最后打乱顺序，消除按深度分桶造成的排列偏置。
+    - ``"full"``：全部为 ``full(config.max_init_depth)``。
+    - ``"grow"``：全部为 ``grow(config.max_init_depth)``。
     """
+    if method == "full":
+        return [full(config.max_init_depth, config, rng) for _ in range(config.population_size)]
+    if method == "grow":
+        return [grow(config.max_init_depth, config, rng) for _ in range(config.population_size)]
+    if method != "ramped":
+        raise ValueError(f"未知初始化方法 {method!r}，可选：{INIT_METHODS}")
+
     depths = list(range(config.min_init_depth, config.max_init_depth + 1))
     per_bucket = config.population_size // len(depths)
     remainder = config.population_size % len(depths)
